@@ -1,48 +1,4 @@
 ---
-# The MySQL apt-get repo DOES NOT include older version... so we'll do it this way
-# https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#repo-qg-apt-repo-manual-setup
-
-# http://docs.ansible.com/ansible/latest/get_url_module.html
-- name: Download a specific version of MySQL
-  get_url:
-    url: "https://downloads.mysql.com/archives/get/file/mysql-server_{{ mysql_version }}-1ubuntu16.04_amd64.deb-bundle.tar"
-    dest: /opt/mysql-server.tar
-
-# http://docs.ansible.com/ansible/latest/unarchive_module.html
-- name: Decompress mysql tar
-    src: /opt/mysql-server.tar
-    dest: /opt/
-    remote_src: yes
-
-# http://docs.ansible.com/ansible/latest/apt_module.html
-- name: Install mysql-common
-  apt: deb=/opt/mysql-common_{{ mysql_version }}1ubuntu16.04_amd64.deb
-
-# http://docs.ansible.com/ansible/latest/apt_module.html
-- name: Install libmysqlclient20
-  apt: deb=/opt/libmysqlclient20_{{ mysql_version }}1ubuntu16.04_amd64.deb
-
-# http://docs.ansible.com/ansible/latest/apt_module.html
-- name: Install mysql-community-client
-  apt: deb=/opt/mysql-community-client_{{ mysql_version }}1ubuntu16.04_amd64.deb
-
-# http://docs.ansible.com/ansible/latest/apt_module.html
-- name: Install mysql-client
-  apt: deb=/opt/mysql-client_{{ mysql_version }}1ubuntu16.04_amd64.deb
-
-# http://docs.ansible.com/ansible/latest/apt_module.html
-- name: Install mysql-community-server
-  apt: deb=/opt/mysql-community-server_{{ mysql_version }}1ubuntu16.04_amd64.deb
-
-- name: Make sure mysql autostarts, but is stopped until it is properly configured
-  service:
-    name: mysql
-    enabled: yes
-    state: stopped
-
-
-
-
 - name: Check if MySQL is already installed.
   stat: path=/etc/init.d/mysql
   register: mysql_installed
@@ -72,16 +28,6 @@
 
 - name: Add MySQL Python Connector repository
   apt_repository: repo='deb http://repo.mysql.com/apt/ubuntu/ xenial connector-python-2.0' state=present
-
-#- name: Add repository for MySQL 5.6
-#  apt_repository: repo='ppa:ondrej/mysql-5.6'
-#  when: mysql_version == "5.6"
-
-#- name: Add repository for MySQL 5.7
-#  apt_repository: repo='ppa:ondrej/mysql-5.7'
-#  when: mysql_version == "5.7"
-
-
 
 # Because Ubuntu starts MySQL as part of the install process, we need to stop
 # mysql and remove the logfiles in case the user set a custom log file size.
