@@ -2,69 +2,39 @@
 # The MySQL apt-get repo DOES NOT include older version... so we'll do it this way
 # https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#repo-qg-apt-repo-manual-setup
 
-# http://docs.ansible.com/ansible/latest/get_url_module.html
-- name: Download a specific version of MySQL
-  get_url:
-    url: "https://downloads.mysql.com/archives/get/file/mysql-server_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb-bundle.tar"
-    dest: /opt/mysql-server.tar
-
 # http://docs.ansible.com/ansible/latest/unarchive_module.html
-- name: Decompress mysql tar
-    src: /opt/mysql-server.tar
-    dest: /opt/
+- name: Download a specific version of MySQL
+  unarchive:
+    src: "https://downloads.mysql.com/archives/get/file/mysql-server_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb-bundle.tar"
+    dest: /opt
     remote_src: yes
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-common
-  apt: deb=/opt/mysql-common_{{ mysql_version }}1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  apt: deb=/opt/mysql-common_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install libmysqlclient20
-  apt: deb=/opt/libmysqlclient20_{{ mysql_version }}1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  apt: deb=/opt/libmysqlclient20_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-community-client
-  apt: deb=/opt/mysql-community-client_{{ mysql_version }}1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  apt: deb=/opt/mysql-community-client_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-client
-  apt: deb=/opt/mysql-client_{{ mysql_version }}1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  apt: deb=/opt/mysql-client_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-community-server
-  apt: deb=/opt/mysql-community-server_{{ mysql_version }}1ubuntu{{ ansible_distribution_version }}_amd64.deb
-
-- name: Make sure mysql autostarts, but is stopped until it is properly configured
-  service:
-    name: mysql
-    enabled: yes
-    state: stopped
-
-
-
-
-- name: Check if MySQL is already installed.
-  stat: path=/etc/init.d/mysql
-  register: mysql_installed
-
-- name: Update apt cache if MySQL is not yet installed.
-  apt: update_cache=yes
-  when: mysql_installed.stat.exists == false
-
-- name: Ensure MySQL Python libraries are installed.
-  apt: "name=python-mysqldb state=installed"
-
-- name: Ensure MySQL packages are installed.
-  apt: "name={{ item }} state=installed"
-  with_items: "{{ mysql_packages }}"
-  register: deb_mysql_install_packages
+  apt: deb=/opt/mysql-community-server_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
 
 # http://docs.ansible.com/ansible/latest/apt_key_module.html
 - name: Add MySQL repository key
   apt_key:
     # url: http://repo.mysql.com/RPM-GPG-KEY-mysql
     keyserver: pgp.mit.edu
-    id :5072E1F5
+    id: "5072E1F5"
     state: present
 
 - name: Add MySQL Server repository
@@ -81,17 +51,23 @@
 #  apt_repository: repo='ppa:ondrej/mysql-5.7'
 #  when: mysql_version == "5.7"
 
+- name: Check if MySQL is already installed.
+  stat: path=/etc/init.d/mysql
+  register: mysql_installed
 
+- name: Update apt cache if MySQL is not yet installed.
+  apt: update_cache=yes
 
-# Because Ubuntu starts MySQL as part of the install process, we need to stop
-# mysql and remove the logfiles in case the user set a custom log file size.
-- name: Ensure MySQL is stopped after initial install.
-  service: "name={{ mysql_daemon }} state=stopped"
-  when: mysql_installed.stat.exists == false
+- name: Ensure MySQL Python libraries are installed.
+  apt: "name=python-mysqldb state=installed"
+
+#- name: Ensure MySQL packages are installed.
+#  apt: "name={{ item }} state=installed"
+#  with_items: "{{ mysql_packages }}"
+#  register: deb_mysql_install_packages
 
 - name: Delete innodb log files created by apt package after initial install.
   file: path={{ mysql_datadir }}/{{item}} state=absent
   with_items:
           - "ib_logfile0"
           - "ib_logfile1"
-  when: mysql_installed.stat.exists == false

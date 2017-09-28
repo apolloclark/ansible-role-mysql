@@ -10,7 +10,7 @@ No special requirements; note that this role requires root access, so either run
 
     - hosts: database
       roles:
-        - role: geerlingguy.mysql
+        - role: apolloclark.mysql
           become: yes
 
 ## Role Variables
@@ -166,7 +166,7 @@ None.
       vars_files:
         - vars/main.yml
       roles:
-        - { role: geerlingguy.mysql }
+        - { role: apolloclark.mysql }
 
 *Inside `vars/main.yml`*:
 
