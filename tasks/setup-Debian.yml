@@ -22,7 +22,7 @@
   apt_key:
     # url: http://repo.mysql.com/RPM-GPG-KEY-mysql
     keyserver: pgp.mit.edu
-    id :5072E1F5
+    id: "5072E1F5"
     state: present
 
 - name: Add MySQL Server repository
