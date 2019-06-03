@@ -46,11 +46,13 @@
 
 
 
+# https://dev.mysql.com/get/mysql-apt-config_0.8.13-1_all.deb
+
 # http://docs.ansible.com/ansible/latest/apt_key_module.html
 - name: Add MySQL repository key
   apt_key:
     # url: http://repo.mysql.com/RPM-GPG-KEY-mysql
-    keyserver: pgp.mit.edu
+    keyserver: keys.gnupg.net
     id: "5072E1F5"
     state: present
   retries: 3
