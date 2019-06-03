@@ -1,6 +1,7 @@
 ---
 # Configure the version to install
 mysql_version: "latest"
+mysql_download_url_prefix: "https://downloads.mysql.com/archives/get/file"
 
 # Set this to the user ansible is logging in as - should have root
 # or sudo access

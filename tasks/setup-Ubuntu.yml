@@ -2,32 +2,49 @@
 # The MySQL apt-get repo DOES NOT include older version... so we'll do it this way
 # https://dev.mysql.com/doc/mysql-apt-repo-quick-guide/en/#repo-qg-apt-repo-manual-setup
 
+# https://downloads.mysql.com/archives/community/
+# https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-server_5.7.26-1ubuntu16.04_amd64.deb-bundle.tar
+# https://downloads.mysql.com/archives/get/file/mysql-server_5.7.25-1ubuntu16.04_amd64.deb-bundle.tar
 # http://docs.ansible.com/ansible/latest/unarchive_module.html
 - name: Download a specific version of MySQL
   unarchive:
-    src: "https://downloads.mysql.com/archives/get/file/mysql-server_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb-bundle.tar"
+    src: "{{ mysql_download_url_prefix }}/mysql-server_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb-bundle.tar"
     dest: /opt
     remote_src: yes
+  when:
+    - mysql_version != "latest"
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-common
   apt: deb=/opt/mysql-common_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  when:
+    - mysql_version != "latest"
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install libmysqlclient20
   apt: deb=/opt/libmysqlclient20_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  when:
+    - mysql_version != "latest"
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-community-client
   apt: deb=/opt/mysql-community-client_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  when:
+    - mysql_version != "latest"
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-client
   apt: deb=/opt/mysql-client_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  when:
+    - mysql_version != "latest"
 
 # http://docs.ansible.com/ansible/latest/apt_module.html
 - name: Install mysql-community-server
   apt: deb=/opt/mysql-community-server_{{ mysql_version }}-1ubuntu{{ ansible_distribution_version }}_amd64.deb
+  when:
+    - mysql_version != "latest"
+
+
 
 # http://docs.ansible.com/ansible/latest/apt_key_module.html
 - name: Add MySQL repository key
@@ -37,12 +54,6 @@
     id: "5072E1F5"
     state: present
 
-- name: Add MySQL Server repository
-  apt_repository: repo='deb http://repo.mysql.com/apt/ubuntu/ {{ ansible_distribution_release }} mysql-5.7' state=present
-
-- name: Add MySQL Python Connector repository
-  apt_repository: repo='deb http://repo.mysql.com/apt/ubuntu/ {{ ansible_distribution_release }} connector-python-2.0' state=present
-
 #- name: Add repository for MySQL 5.6
 #  apt_repository: repo='ppa:ondrej/mysql-5.6'
 #  when: mysql_version == "5.6"
@@ -50,6 +61,21 @@
 #- name: Add repository for MySQL 5.7
 #  apt_repository: repo='ppa:ondrej/mysql-5.7'
 #  when: mysql_version == "5.7"
+
+- name: Add MySQL Server repository
+  apt_repository: repo='deb http://repo.mysql.com/apt/ubuntu/ {{ ansible_distribution_release }} mysql-5.7' state=present
+
+- name: Add MySQL Python Connector repository
+  apt_repository: repo='deb http://repo.mysql.com/apt/ubuntu/ {{ ansible_distribution_release }} connector-python-2.0' state=present
+
+- name: Install the latest available mysql packages, from repo
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ mysql_packages }}"
+  register: deb_mysql_install_packages
+  when:
+    - mysql_version == "latest"
 
 - name: Check if MySQL is already installed.
   stat: path=/etc/init.d/mysql
@@ -62,11 +88,6 @@
   apt:
     name: python-mysqldb
     state: present
-
-#- name: Ensure MySQL packages are installed.
-#  apt: "name={{ item }} state=installed"
-#  with_items: "{{ mysql_packages }}"
-#  register: deb_mysql_install_packages
 
 - name: Delete innodb log files created by apt package after initial install.
   file: path={{ mysql_datadir }}/{{ item }} state=absent
