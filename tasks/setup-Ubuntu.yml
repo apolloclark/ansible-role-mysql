@@ -49,6 +49,7 @@
 # https://dev.mysql.com/get/mysql-apt-config_0.8.13-1_all.deb
 
 # http://docs.ansible.com/ansible/latest/apt_key_module.html
+# https://bugs.mysql.com/bug.php?id=94378
 - name: Add MySQL repository key
   apt_key:
     # url: http://repo.mysql.com/RPM-GPG-KEY-mysql
@@ -74,9 +75,8 @@
 
 - name: Install the latest available mysql packages, from repo
   apt:
-    name: "{{ item }}"
+    name: "{{ mysql_packages }}"
     state: present
-  with_items: "{{ mysql_packages }}"
   register: deb_mysql_install_packages
   when:
     - mysql_version == "latest"
